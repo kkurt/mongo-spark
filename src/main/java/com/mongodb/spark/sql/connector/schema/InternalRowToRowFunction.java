@@ -18,15 +18,22 @@
 package com.mongodb.spark.sql.connector.schema;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.analysis.SimpleAnalyzer$;
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder;
-import org.apache.spark.sql.catalyst.encoders.RowEncoder$;
 import org.apache.spark.sql.catalyst.expressions.Attribute;
+import org.apache.spark.sql.catalyst.expressions.AttributeReference;
+import org.apache.spark.sql.catalyst.expressions.ExprId;
+import org.apache.spark.sql.catalyst.expressions.ExprId$;
+import org.apache.spark.sql.catalyst.expressions.NamedExpression;
+import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import scala.collection.immutable.Seq;
+import scala.jdk.CollectionConverters;
 
 /**
  * An InternalRow to Row function that uses a resolved and bound encoder for the given schema.
@@ -41,11 +48,30 @@ final class InternalRowToRowFunction implements Function<InternalRow, Row>, Seri
 
   @SuppressWarnings("unchecked")
   InternalRowToRowFunction(final StructType schema) {
-    ExpressionEncoder<Row> rowEncoder = RowEncoder$.MODULE$.apply(schema);
-    Seq<Attribute> attributeSeq =
-        (Seq<Attribute>) (Seq<? extends Attribute>) rowEncoder.schema().toAttributes();
+
+    List<Attribute> attributesList = new ArrayList<>();
+    for (StructField field : schema.fields()) {
+      ExprId exprId = NamedExpression.newExprId();
+      AttributeReference attributeReference = new AttributeReference(
+          field.name(),
+          field.dataType(),
+          field.nullable(),
+          field.metadata(),
+          ExprId$.MODULE$.apply(exprId.id()),
+          CollectionConverters.ListHasAsScala(new ArrayList<String>()).asScala().toSeq());
+      attributesList.add(attributeReference);
+    }
+
+    Seq<Attribute> fields =
+        CollectionConverters.ListHasAsScala(attributesList).asScala().toSeq();
+
+    ExpressionEncoder<Row> rowEncoder2 = ExpressionEncoder.apply(schema);
+    // AgnosticEncoder<Row> rowEncoder = RowEncoder$.MODULE$.encoderFor(schema).resolveAndBind();
+
+    // this.deserializer = rowEncoder.resolveAndBind(attributeSeq,
+    // SimpleAnalyzer$.MODULE$).createDeserializer();
     this.deserializer =
-        rowEncoder.resolveAndBind(attributeSeq, SimpleAnalyzer$.MODULE$).createDeserializer();
+        rowEncoder2.resolveAndBind(fields, SimpleAnalyzer$.MODULE$).createDeserializer();
   }
 
   @Override
