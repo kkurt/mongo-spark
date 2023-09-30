@@ -47,7 +47,7 @@ final class RowToInternalRowFunction implements Function<Row, InternalRow>, Seri
   private final ExpressionEncoder.Serializer<Row> serializer;
 
   RowToInternalRowFunction(final StructType schema) {
-    // this.serializer = RowEncoder$.MODULE$.apply(schema).createSerializer();
+
     List<Attribute> attributesList = new ArrayList<>();
     for (StructField field : schema.fields()) {
       ExprId exprId = NamedExpression.newExprId();

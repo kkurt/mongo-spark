@@ -46,7 +46,7 @@ final class InternalRowToRowFunction implements Function<InternalRow, Row>, Seri
 
   private final ExpressionEncoder.Deserializer<Row> deserializer;
 
-  @SuppressWarnings("unchecked")
+
   InternalRowToRowFunction(final StructType schema) {
 
     List<Attribute> attributesList = new ArrayList<>();
@@ -62,16 +62,12 @@ final class InternalRowToRowFunction implements Function<InternalRow, Row>, Seri
       attributesList.add(attributeReference);
     }
 
-    Seq<Attribute> fields =
-        CollectionConverters.ListHasAsScala(attributesList).asScala().toSeq();
+    Seq<Attribute> fields =  CollectionConverters.ListHasAsScala(attributesList).asScala().toSeq();
 
-    ExpressionEncoder<Row> rowEncoder2 = ExpressionEncoder.apply(schema);
-    // AgnosticEncoder<Row> rowEncoder = RowEncoder$.MODULE$.encoderFor(schema).resolveAndBind();
+    ExpressionEncoder<Row> rowEncoder = ExpressionEncoder.apply(schema);
 
-    // this.deserializer = rowEncoder.resolveAndBind(attributeSeq,
-    // SimpleAnalyzer$.MODULE$).createDeserializer();
     this.deserializer =
-        rowEncoder2.resolveAndBind(fields, SimpleAnalyzer$.MODULE$).createDeserializer();
+        rowEncoder.resolveAndBind(fields, SimpleAnalyzer$.MODULE$).createDeserializer();
   }
 
   @Override
