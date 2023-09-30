@@ -1,6 +1,15 @@
-# MongoDB Spark Connector
+# MongoDB Spark Connector For Spark 3.5.x
 
-The official MongoDB Spark Connector.
+This is fork of official MongoDB Spark Connector. It is changed for using with Spark 3.5.
+You can use it with jitpack repo :
+
+for sbt:
+```
+resolvers += "jitpack" at "https://jitpack.io"
+libraryDependencies ++= Seq("com.github.kkurt" % "mongo-spark" % "main-SNAPSHOT")
+```
+
+Have fun!
 
 ## Documentation
 
